@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'maven-publish'
+    id 'nu.studer.credentials' version '3.0'
 }
 
 group 'com.bedatadriven'
@@ -15,8 +17,53 @@ targetCompatibility = 11
 dependencies {
     implementation 'org.locationtech.jts:jts-core:1.19.0'
     implementation 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.14.0'
-//    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.4.2'
     testImplementation 'junit:junit:4.11'
     testImplementation 'org.easymock:easymock:3.2'
 
+}
+
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        JTSPublish(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar {
+                classifier = 'sources'
+            }
+
+            pom {
+                name = 'JTS Marshall and Unmarshall'
+                url = 'https://github.com/eramming/jackson-datatype-jts'
+                description = "A Java library for serializing and deserializing GeoJson."
+                developers {
+                    developer {
+                        id = 'eramming'
+                        name = 'Eric Ramming'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'BbnMavenUsOnly'
+            url = uri('https://artifacts.bbn.com/artifactory/bbn-maven-us-only/')
+//            credentials(PasswordCredentials)
+            credentials {
+                username project.credentials.forKey('BbnMavenUsOnlyUsername')
+                password project.credentials.forKey('BbnMavenUsOnlyPassword')
+            }
+        }
+    }
 }
